@@ -1,47 +1,50 @@
-package com.example.mmxweather
+package com.example.mmxweather // Укажите свой пакет
 
+import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.mmxweather.ui.theme.MmxWeatherTheme
+import android.widget.Toast // Для отображения сообщений об ошибке
+import androidx.activity.viewModels // Для получения ViewModel
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.example.mmxweather.data.WeatherEntry
+import com.example.mmxweather.ui.weather.WeatherAdapter
+import com.example.mmxweather.ui.weather.WeatherViewModel // Импортируем ViewModel
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
+
+    private lateinit var recyclerViewWeather: RecyclerView
+    private lateinit var weatherAdapter: WeatherAdapter
+    private val weatherViewModel: WeatherViewModel by viewModels() // Получаем ViewModel
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            MmxWeatherTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
-            }
+        setContentView(R.layout.activity_weather) // Устанавливаем макет activity_weather.xml
+
+        recyclerViewWeather = findViewById(R.id.recyclerViewWeather)
+
+        // Устанавливаем LayoutManager
+        recyclerViewWeather.layoutManager = LinearLayoutManager(this)
+
+        // Инициализируем адаптер с пустым списком (данные будут загружены позже)
+        weatherAdapter = WeatherAdapter(emptyList())
+        recyclerViewWeather.adapter = weatherAdapter
+
+        // Наблюдаем за weatherList в ViewModel
+        weatherViewModel.weatherList.observe(this) { weatherList ->
+            // Когда данные о погоде обновляются, обновляем адаптер
+            weatherAdapter = WeatherAdapter(weatherList) // Создаем новый адаптер с новыми данными
+            recyclerViewWeather.adapter = weatherAdapter // Присваиваем новый адаптер RecyclerView
         }
-    }
-}
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+        // Наблюдаем за errorMessage в ViewModel
+        weatherViewModel.errorMessage.observe(this) { errorMessage ->
+            // Если есть сообщение об ошибке, отображаем его (например, в Toast)
+            Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show()
+        }
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    MmxWeatherTheme {
-        Greeting("Android")
+        // Вызываем функцию получения погоды (например, для определенного города и вашего API ключа)
+        val city = "London" // Замените на нужный город
+        val apiKey = "85afd36bff2ab36aac6bdf3a9e0bec09" // Ваш API ключ
+        weatherViewModel.fetchWeather(city, apiKey)
     }
 }

@@ -8,6 +8,8 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mmxweather.R // Убедитесь, что R импортируется правильно
 import com.example.mmxweather.data.WeatherEntry
+import androidx.core.content.ContextCompat
+import android.graphics.Color
 
 class WeatherAdapter(private val weatherList: List<WeatherEntry>) :
     RecyclerView.Adapter<WeatherAdapter.WeatherViewHolder>() {
@@ -36,9 +38,37 @@ class WeatherAdapter(private val weatherList: List<WeatherEntry>) :
         holder.textViewTemperature.text = "Температура: ${currentItem.temperature}°C"
         holder.textViewCondition.text = "Условия: ${currentItem.condition}"
 
-        // Здесь нужно будет загружать иконку погоды, например, с помощью Glide или Coil
-        // Пока оставим заглушку
-        // holder.imageViewWeatherIcon.setImageResource(...) или использовать библиотеку для загрузки изображений
+        // --- Условное оформление ---
+
+        // Изменение цвета фона в зависимости от температуры (пример)
+        val temperature = currentItem.temperature
+        val backgroundColor = when {
+            temperature < 0 -> ContextCompat.getColor(holder.itemView.context, R.color.color_cold)
+            temperature >= 0 && temperature < 20 -> ContextCompat.getColor(holder.itemView.context, R.color.color_warm)
+            else -> Color.WHITE // Цвет по умолчанию
+        }
+        holder.itemView.setBackgroundColor(backgroundColor)
+
+        // Изменение иконки в зависимости от погодных условий (пример)
+        val condition = currentItem.condition.toLowerCase() // Приводим к нижнему регистру для удобства сравнения
+        val weatherIconResource = when {
+            condition.contains("clear") || condition.contains("солнечно") -> R.drawable.ic_sunny // Замените на ваши ресурсы
+            condition.contains("cloud") || condition.contains("пасмурно") -> R.drawable.ic_cloudy
+            condition.contains("rain") || condition.contains("дождь") -> R.drawable.ic_rainy
+            condition.contains("snow") || condition.contains("снег") -> R.drawable.ic_snowy
+            else -> R.drawable.ic_launcher_foreground // Иконка по умолчанию
+        }
+        holder.imageViewWeatherIcon.setImageResource(weatherIconResource)
+
+        // --- Конец условного оформления ---
+
+        // Загрузка иконки погоды по URL (если API предоставляет URL и вы хотите его использовать)
+        // Если вы используете иконки из ресурсов, этот блок не нужен или нужно добавить логику выбора между URL и ресурсом
+        // val iconUrl = currentItem.iconUrl
+        // if (iconUrl.isNotEmpty()) {
+        //     // Используйте библиотеку для загрузки изображений (Glide, Coil)
+        //     // Glide.with(holder.itemView.context).load(iconUrl).into(holder.imageViewWeatherIcon) Вне адаптера
+        // }
     }
 
     // Возвращает размер вашего набора данных (вызывается LayoutManager)
